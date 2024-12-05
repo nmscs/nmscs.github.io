@@ -1,335 +1,164 @@
-body {
-    font-family: 'PT Serif', serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.filter-checkbox');
+    const products = document.querySelectorAll('.product');
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    const orderButton = document.getElementById('orderButton');
+    const deliveryForm = document.getElementById('deliveryForm');
+    const addressInput = document.getElementById('address');
+    const phoneInput = document.getElementById('phone');
+    const searchInput = document.getElementById('searchInput');
 
-.container {
-    flex: 1;
-}
+    function filterProducts() {
+        const selectedFilters = Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
 
-.header-banner-container {
-    background-image: url('фон1.png'); /* Фоновое изображение */
-    background-size: 2000px; /* Уменьшение размера изображения */
-    background-repeat: no-repeat; /* Предотвращение повторения изображения */
-    background-position: center; /* Центрирование изображения */
-    color: #fff;
-    padding: 20px 0;
-}
+        const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
 
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
+        products.forEach(product => {
+            const productClasses = Array.from(product.classList);
+            const productName = product.querySelector('p').textContent.toLowerCase();
+            const shouldDisplay = selectedFilters.length === 0 || productClasses.some(className => selectedFilters.includes(className));
+            const matchesSearch = productName.includes(searchQuery);
+            product.style.display = shouldDisplay && matchesSearch ? 'block' : 'none';
+        });
+    }
 
-}
+    if (checkboxes) {
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', filterProducts);
+        });
+    }
 
-.home-page .header .nav a {
-    color: #fff;
-}
+    if (searchInput) {
+        searchInput.addEventListener('input', filterProducts);
+    }
 
-.catalog-page .header {
-    background-color: #fff; /* Белый фон для шапки на странице каталога */
-}
+    // Initial filtering based on default checked state
+    filterProducts();
 
-.catalog-page .header .nav a,
-.product-page .header .nav a,
-.cart-page .header .nav a {
-    color: #000; /* Черный цвет шрифта для каталога */
-}
+    // Add click event listener to products for navigation
+    products.forEach(product => {
+        product.addEventListener('click', function() {
+            const link = product.getAttribute('data-link');
+            if (link) {
+                window.location.href = link;
+            }
+        });
+    });
 
-.logo img {
-    height: 80px; /* Увеличенный размер логотипа */
-}
+    // Function to add item to cart
+    function addToCart(event) {
+        const button = event.target;
+        const name = button.getAttribute('data-name');
+        const price = button.getAttribute('data-price');
+        const image = button.getAttribute('data-image');
 
-.nav {
-    display: flex;
-    gap: 20px;
-}
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const existingItem = cart.find(item => item.name === name);
 
-.nav a {
-    text-decoration: none;
-    color: #fff;
-    font-size: 20px; /* Увеличенный размер шрифта */
-    padding: 20px 0px; /* Добавлены отступы */
-}
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({ name, price, image, quantity: 1 });
+        }
 
-.nav a:hover {
-    text-decoration: underline;
-}
+        localStorage.setItem('cart', JSON.stringify(cart));
+        alert('Товар добавлен в корзину!');
+    }
 
-.nav a:not(:last-child)::after {
-    content: '|';
-    margin: 0 30px;
-    color: #ccc;
-    padding: 10px 10px;
-}
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', addToCart);
+    });
 
-.cart-section {
-  display: flex;
-  flex-direction: column;
-  margin-top: 10px;
-  padding-right: 150px; /* Смещение контейнера корзины от левого края */
-}
+    // Function to load cart items on the cart page
+    function loadCartItems() {
+        const cartItemsContainer = document.getElementById('cart-items');
+        const totalPriceElement = document.getElementById('total-price');
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let totalPrice = 0;
 
-.cart-section h1 {
-  margin-bottom: 20px; /* Дополнительный отступ для заголовка */
-}
+        cartItemsContainer.innerHTML = '';
 
-.cart-items {
-    width: 70%;
-    margin-left: 50px; /* Смещение товаров от левого края */
-    margin-bottom: 5px; /* Отступ снизу для товаров */
-    margin-top: 50px;
-}
+        cart.forEach((item, index) => {
+            const cartItem = document.createElement('div');
+            cartItem.classList.add('cart-item');
+            cartItem.innerHTML = `
+                <img src="${item.image}" alt="${item.name}">
+                <div class="details">
+                    <p>${item.name}</p>
+                    <p>${item.price} руб. x ${item.quantity}</p>
+                </div>
+                <button class="remove-from-cart" data-index="${index}">Удалить</button>
+            `;
+            cartItemsContainer.appendChild(cartItem);
+            totalPrice += parseFloat(item.price) * item.quantity;
+        });
 
-.cart-item {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 10px;
-}
+        totalPriceElement.textContent = `${totalPrice} руб.`;
 
-.cart-item img {
-    width: 100px;
-    height: auto;
-    margin-right: 50px;
-}
+        // Add event listeners to remove buttons
+        const removeButtons = document.querySelectorAll('.remove-from-cart');
+        removeButtons.forEach(button => {
+            button.addEventListener('click', removeFromCart);
+        });
+    }
 
-.cart-item .details {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    flex: 1;
-}
+    // Function to remove item from cart
+    function removeFromCart(event) {
+        const button = event.target;
+        const index = button.getAttribute('data-index');
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        cart.splice(index, 1);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        loadCartItems(); // Reload cart items to update the display
+    }
 
-.cart-item .details p {
-    margin: 0;
-}
+    // Load cart items if on the cart page
+    if (window.location.pathname.includes('cart.html')) {
+        loadCartItems();
+    }
 
-.cart-item .price {
-    font-size: 18px;
-    font-weight: bold;
-    text-align: right;
-    flex: 1;
-}
+    // Function to validate phone number
+    function validatePhoneNumber(phone) {
+        const phoneRegex = /^\+?[0-9]{10,15}$/;
+        return phoneRegex.test(phone);
+    }
 
-.cart-item button {
-    background-color: #000;
-    color: #fff;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-left: 10px;
-}
+    // Function to handle form submission
+    function handleFormSubmit(event) {
+        event.preventDefault();
 
-.delivery-form {
-    margin-top: 20px;
-    padding-left: 50px; /* Смещение формы от левого края */
-}
+        const address = addressInput.value.trim();
+        const phone = phoneInput.value.trim();
 
-.delivery-form h3 {
-    margin-bottom: 10px;
-    font-size: 28px;
-}
+        if (!address || !phone) {
+            $('#orderModalBody').text('Пожалуйста, заполните все обязательные поля.');
+            $('#orderModal').modal('show');
+            return;
+        }
 
-.delivery-form label {
-    display: block;
-    margin-bottom: 5px;
-}
+        if (!validatePhoneNumber(phone)) {
+            $('#orderModalBody').text('Некорректный номер телефона.');
+            $('#orderModal').modal('show');
+            return;
+        }
 
-.delivery-form input[type="text"] {
-    width: 20%;
-    padding: 8px;
-    margin-bottom: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
+        const formData = {
+            address: address,
+            phone: phone
+        };
 
-.cart-total {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  margin-top: 20px;
-  padding-left: 50px; /* Смещение заголовка "Итого" от левого края */
-}
+        console.log('Данные формы:', formData);
 
-.cart-total h2 {
-    margin-top: 0;
-    font-size: 28px;
-}
+        // Here you can add code to send formData to the server
 
-.cart-total p {
-    font-size: 32px;
-    font-weight: bold;
-    margin: 0px 0px;
-}
+        $('#orderModalBody').text('Данные формы успешно обработаны и отправлены.');
+        $('#orderModal').modal('show');
+    }
 
-.cart-total button {
-    padding: 10px 20px;
-    background-color: #000;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    border-radius: 25px;
-    font-size: 16px;
-    margin-top: 10px;
-}
-
-.banner {
-    text-align: center;
-    padding: 20px 0;
-}
-
-.banner button {
-    padding: 15px 30px;
-    background-color: #000;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    border-radius: 30px; /* Скругление углов */
-}
-
-.gallery {
-    display: flex;
-    justify-content: center;
-    gap: 50px;
-    padding: 50px;
-    background-color: #FFFFFF;
-}
-
-.gallery-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.gallery img {
-    width: 400px; /* Увеличенный размер изображений */
-    height: auto;
-}
-
-.catalog {
-    display: flex;
-    padding: 20px;
-}
-
-.filters {
-    width: 200px;
-    margin-right: 20px;
-}
-
-.filters h3, .filters h4 {
-    margin-bottom: 10px;
-}
-
-.filters label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.products {
-    display: flex;
-    gap: 20px;
-}
-
-.product {
-    text-align: center;
-    width: 290px;
-    padding: 30px 50px;
-
-}
-
-.product img {
-    width: 300px;
-    height: auto;
-
-}
-
-.product-info {
-    display: flex;
-    align-items: flex-start;
-    margin-top: 20px;
-}
-
-.product-image {
-    margin-left: 80px; /* Смещение картинки от левого края */
-}
-
-.product-image img {
-    width: 300px;
-    height: auto;
-    margin-right: 30px;
-    margin-top: 50px;
-}
-
-.product-description {
-    max-width: 500px;
-}
-
-.product-description h2 {
-    margin-top: 50px;
-}
-
-.product-description p {
-    margin: 10px 0;
-}
-
-.product-description .price {
-    font-size: 36px; /* Увеличенный размер шрифта для цены */
-    font-weight: bold; /* Жирный шрифт для цены */
-}
-
-.product-description button {
-    padding: 15px 25px;
-    background-color: #000;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    border-radius: 30px; /* Скругление углов */
-    margin-top: 15px;
-    font-size: 16px;
-}
-
-.add-to-cart {
-    padding: 5px 10px; /* Уменьшенные отступы для кнопки */
-    background-color: #333;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    border-radius: 0px; /* Скругление углов */
-    margin-top: 10px;
-    font-size: 12px; /* Уменьшенный размер шрифта */
-}
-
-.footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 15px;
-    background-color: #F0F0F0;
-    color: #333;
-    margin-top: auto; /* Перемещает футер вниз */
-}
-
-.footer-logo img {
-    height: 80px; /* Увеличенный размер логотипа */
-    padding: 15px 10px;
-}
-
-.contacts {
-    text-align: right;
-    width: 600px;
-}
-
-.contacts p {
-    margin: 5px 0;
-}
+    // Add event listener to the order button
+    if (orderButton) {
+        orderButton.addEventListener('click', handleFormSubmit);
+    }
+});
