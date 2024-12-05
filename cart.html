@@ -19,7 +19,6 @@
               <a href="index.html">Главная</a>
               <a href="catalog.html">Каталог</a>
               <a href="cart.html">Корзина</a>
-              <a href="#">Контакты</a>
           </div>
       </div>
 
@@ -28,6 +27,24 @@
             <div class="cart-items" id="cart-items">
                 <!-- Товары будут добавляться здесь с помощью JavaScript -->
             </div>
+            <div class="delivery-form">
+                <h3>Способ доставки</h3>
+                <form id="deliveryForm">
+                    <label>
+                        <input type="checkbox" name="delivery" value="pickup">
+                        Самовывоз из магазина
+                    </label>
+                    <label>
+                        <input type="checkbox" name="delivery" value="courier">
+                        Доставка курьером
+                    </label>
+                    <div class="courier-details" style="display: none;">
+                        <label for="address">Укажите адрес доставки:</label>
+                        <input type="text" id="address" name="address" placeholder="Укажите адрес доставки">
+                        <label for="phone">Укажите номер телефона:</label>
+                        <input type="text" id="phone" name="phone" placeholder="Укажите номер телефона">
+                    </div>
+                </form>
             <div class="cart-total">
                 <h2>Итого</h2>
                 <p id="total-price">0 руб.</p>
@@ -50,5 +67,19 @@
     </div>
 
     <script src="scripts.js"></script>
+    <script>
+        // JavaScript для отображения полей доставки курьером
+        const deliveryForm = document.getElementById('deliveryForm');
+        const courierDetails = document.querySelector('.courier-details');
+        const courierCheckbox = document.querySelector('input[value="courier"]');
+
+        courierCheckbox.addEventListener('change', function() {
+            if (courierCheckbox.checked) {
+                courierDetails.style.display = 'block';
+            } else {
+                courierDetails.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
