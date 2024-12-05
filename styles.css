@@ -72,7 +72,7 @@ body {
 .cart-section {
   display: flex;
   flex-direction: column;
-  margin-top: 20px;
+  margin-top: 10px;
   padding-right: 150px; /* Смещение контейнера корзины от левого края */
 }
 
@@ -127,6 +127,29 @@ body {
     border-radius: 5px;
     cursor: pointer;
     margin-left: 10px;
+}
+
+.delivery-form {
+    margin-top: 20px;
+    padding-left: 50px; /* Смещение формы от левого края */
+}
+
+.delivery-form h3 {
+    margin-bottom: 10px;
+    font-size: 28px;
+}
+
+.delivery-form label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.delivery-form input[type="text"] {
+    width: 20%;
+    padding: 8px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 .cart-total {
@@ -291,7 +314,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 20px;
+    padding: 15px;
     background-color: #F0F0F0;
     color: #333;
     margin-top: auto; /* Перемещает футер вниз */
