@@ -2,22 +2,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkboxes = document.querySelectorAll('.filter-checkbox');
     const products = document.querySelectorAll('.product');
     const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    const orderButton = document.getElementById('orderButton');
+    const deliveryForm = document.getElementById('deliveryForm');
+    const addressInput = document.getElementById('address');
+    const phoneInput = document.getElementById('phone');
+    const searchInput = document.getElementById('searchInput');
 
     function filterProducts() {
         const selectedFilters = Array.from(checkboxes)
             .filter(checkbox => checkbox.checked)
             .map(checkbox => checkbox.value);
 
+        const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+
         products.forEach(product => {
             const productClasses = Array.from(product.classList);
+            const productName = product.querySelector('p').textContent.toLowerCase();
             const shouldDisplay = selectedFilters.length === 0 || productClasses.some(className => selectedFilters.includes(className));
-            product.style.display = shouldDisplay ? 'block' : 'none';
+            const matchesSearch = productName.includes(searchQuery);
+            product.style.display = shouldDisplay && matchesSearch ? 'block' : 'none';
         });
     }
 
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', filterProducts);
-    });
+    if (checkboxes) {
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', filterProducts);
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterProducts);
+    }
 
     // Initial filtering based on default checked state
     filterProducts();
@@ -102,5 +117,48 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load cart items if on the cart page
     if (window.location.pathname.includes('cart.html')) {
         loadCartItems();
+    }
+
+    // Function to validate phone number
+    function validatePhoneNumber(phone) {
+        const phoneRegex = /^\+?[0-9]{10,15}$/;
+        return phoneRegex.test(phone);
+    }
+
+    // Function to handle form submission
+    function handleFormSubmit(event) {
+        event.preventDefault();
+
+        const address = addressInput.value.trim();
+        const phone = phoneInput.value.trim();
+
+        if (!address || !phone) {
+            $('#orderModalBody').text('Пожалуйста, заполните все обязательные поля.');
+            $('#orderModal').modal('show');
+            return;
+        }
+
+        if (!validatePhoneNumber(phone)) {
+            $('#orderModalBody').text('Некорректный номер телефона.');
+            $('#orderModal').modal('show');
+            return;
+        }
+
+        const formData = {
+            address: address,
+            phone: phone
+        };
+
+        console.log('Данные формы:', formData);
+
+        // Here you can add code to send formData to the server
+
+        $('#orderModalBody').text('Данные формы успешно обработаны и отправлены.');
+        $('#orderModal').modal('show');
+    }
+
+    // Add event listener to the order button
+    if (orderButton) {
+        orderButton.addEventListener('click', handleFormSubmit);
     }
 });
